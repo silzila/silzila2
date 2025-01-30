@@ -39,21 +39,22 @@ public class DatasetAndFileDataBuffer {
 
     public static HashMap<String, List<FileData>> usersFileDatas = new HashMap<String, List<FileData>>();
 
-    public DatasetDTO loadDatasetInBuffer(String workspaceId,String datasetId, String userId)
-            throws RecordNotFoundException, JsonMappingException, JsonProcessingException, ClassNotFoundException, BadRequestException, SQLException {
+    public DatasetDTO loadDatasetInBuffer(String workspaceId, String datasetId, String userId)
+            throws RecordNotFoundException, JsonMappingException, JsonProcessingException, ClassNotFoundException,
+            BadRequestException, SQLException {
         DatasetDTO dto;
         if (datasetDetails.containsKey(datasetId)) {
             dto = datasetDetails.get(datasetId);
         } else {
-            dto = getDatasetById(datasetId, userId,workspaceId);
+            dto = getDatasetById(datasetId, userId, workspaceId);
             datasetDetails.put(datasetId, dto);
         }
         return dto;
     }
 
-    public DatasetDTO getDatasetById(String id, String userId,String workspaceId)
+    public DatasetDTO getDatasetById(String id, String userId, String workspaceId)
             throws RecordNotFoundException, JsonMappingException, JsonProcessingException {
-        Optional<Dataset> dOptional = datasetRepository.findByIdAndUserId(id, userId);
+        Optional<Dataset> dOptional = datasetRepository.findById(id);
         // if no connection details inside optional warpper, then send NOT FOUND Error
         if (!dOptional.isPresent()) {
             throw new RecordNotFoundException("Error: No such Dataset Id exists!");
@@ -85,25 +86,24 @@ public class DatasetAndFileDataBuffer {
         return datasetDetails;
     }
 
-    public void addDatasetInBuffer(String datasetId,DatasetDTO datasetDTO) {
-       datasetDetails.put(datasetId, datasetDTO);
+    public void addDatasetInBuffer(String datasetId, DatasetDTO datasetDTO) {
+        datasetDetails.put(datasetId, datasetDTO);
     }
 
-    public DatasetDTO getDatasetDetailsById(String datasetId){
-        return (datasetDetails.keySet().contains(datasetId))?datasetDetails.get(datasetId):null;
+    public DatasetDTO getDatasetDetailsById(String datasetId) {
+        return (datasetDetails.keySet().contains(datasetId)) ? datasetDetails.get(datasetId) : null;
     }
 
-    public void removeDatasetDetailsFromBuffer(String datasetId){
+    public void removeDatasetDetailsFromBuffer(String datasetId) {
         datasetDetails.remove(datasetId);
     }
 
-    public List<FileData> getFileDataByUserId(String userId){
+    public List<FileData> getFileDataByUserId(String userId) {
 
         List<FileData> fileDataList;
         if (usersFileDatas.containsKey(userId)) {
             fileDataList = usersFileDatas.get(userId);
-        }
-        else {
+        } else {
             fileDataList = fileDataRepository.findByUserId(userId);
             usersFileDatas.put(userId, fileDataList);
         }
@@ -112,11 +112,11 @@ public class DatasetAndFileDataBuffer {
 
     }
 
-    public void removeFileDataFromBuffer(String userId){
+    public void removeFileDataFromBuffer(String userId) {
         usersFileDatas.remove(userId);
     }
 
-    public void addFileDataUser(String userId,FileData fileData){
+    public void addFileDataUser(String userId, FileData fileData) {
         if (usersFileDatas.containsKey(userId)) {
             List<FileData> fileDataList = usersFileDatas.get(userId);
             fileDataList.add(fileData);
@@ -134,16 +134,14 @@ public class DatasetAndFileDataBuffer {
                     return;
                 }
             }
-        } 
+        }
     }
 
-    public void deleteFileDataUser(String userId,String id){
-        if(usersFileDatas.containsKey(userId)){
+    public void deleteFileDataUser(String userId, String id) {
+        if (usersFileDatas.containsKey(userId)) {
             List<FileData> fileDataList = usersFileDatas.get(userId);
             fileDataList.removeIf(fd -> fd.getId().equals(id));
         }
     }
 
-
 }
-

@@ -58,8 +58,20 @@ public class SelectClausePostgres {
                 for(String key : aliasNumberingM.keySet()){
 
                     for(String key1 : aliasNumbering.keySet()){
-                    if(key.equals(req.getMeasures().get(0).getFieldName()) && key.equals(key1) && aliasNumbering.get(key).equals(aliasNumberingM.get(key1))){
-                            aliasNumbering.put(key, aliasNumbering.get(key) + 1);
+                    // if(key.equals(req.getMeasures().get(0).getFieldName()) && key.equals(key1) && aliasNumbering.get(key).equals(aliasNumberingM.get(key1))){
+                    //         aliasNumbering.put(key, aliasNumbering.get(key) + 1);
+                    // }
+                    if (aliasNumbering.containsKey(key) && aliasNumberingM.containsKey(key1)) {
+                        // Check if the field name matches the measure field
+                        if (key.equals(req.getMeasures().get(0).getFieldName())) {
+                            // Increment the alias number only if both keys are equal and alias numbers match
+                            if (key.equals(key1) && aliasNumbering.get(key).equals(aliasNumberingM.get(key1))) {
+                                aliasNumbering.put(key, aliasNumbering.get(key) + 1);
+                            }
+                        }
+                    } else {
+                        // Handle the case where keys are not present in the maps
+                        System.out.println("One of the keys is missing in the maps.");
                     }
                 }
                 }

@@ -61,9 +61,18 @@ public class SelectClauseSqlserver {
                 for(String key : aliasNumberingM.keySet()){
 
                     for(String key1 : aliasNumbering.keySet()){
-                    if(key.equals(req.getMeasures().get(0).getFieldName()) && key.equals(key1) && aliasNumbering.get(key).equals(aliasNumberingM.get(key1))){
-                            aliasNumbering.put(key, aliasNumbering.get(key) + 1);
-                    }
+                        if (aliasNumbering.containsKey(key) && aliasNumberingM.containsKey(key1)) {
+                            // Check if the key matches the first measure's field name
+                            if (key.equals(req.getMeasures().get(0).getFieldName()) && key.equals(key1)) {
+                                // Check if the alias numbers are equal before incrementing
+                                if (aliasNumbering.get(key).equals(aliasNumberingM.get(key1))) {
+                                    aliasNumbering.put(key, aliasNumbering.get(key) + 1);
+                                }
+                            }
+                        } else {
+                            // Handle the case where keys are not present in the maps
+                            System.out.println("One of the keys is missing in the maps.");
+                        }
                 }
                 }
                

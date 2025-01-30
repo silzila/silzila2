@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Generated;
+
+import com.databricks.client.jdbc42.internal.apache.arrow.flatbuf.Bool;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -52,6 +54,8 @@ public class Filter implements Serializable {
     @JsonProperty("isTillDate")
     private Boolean isTillDate = false; 
     private final static long serialVersionUID = 4876626487235075859L;
+    @JsonProperty("currentSelection")
+    private Boolean currentSelection=false;
 
     /**
      * No args constructor for use in serialization
@@ -74,7 +78,7 @@ public class Filter implements Serializable {
      */
     public Filter(String tableId, String tableName, String fieldName, Filter.DataType dataType, String uid, Boolean shouldExclude,
             Filter.TimeGrain timeGrain, Filter.Operator operator, List<String> userSelection, String filterType,
-            RelativeCondition relativeCondition, Boolean  isTillDate) {
+            RelativeCondition relativeCondition, Boolean  isTillDate,Boolean currentSelection) {
         super();
         this.tableId = tableId;
         this.tableName = tableName;
@@ -88,6 +92,7 @@ public class Filter implements Serializable {
         this.filterType = filterType;
         this.relativeCondition = relativeCondition;
         this.isTillDate = isTillDate;
+        this.currentSelection=currentSelection;
     }
 
     @JsonProperty("filterType")
@@ -108,6 +113,14 @@ public class Filter implements Serializable {
     @JsonProperty("tableId")
     public void setTableId(String tableId) {
         this.tableId = tableId;
+    }
+    
+    public Boolean getCurrentSelection() {
+        return currentSelection;
+    }
+
+    public void setCurrentSelection(Boolean currentSelection) {
+        this.currentSelection = currentSelection;
     }
 
     @JsonProperty("tableName")

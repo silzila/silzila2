@@ -440,6 +440,24 @@ public class ConnectionPoolService {
             throw new ExpectationFailedException("Wrong query!! CustomQuery is only allowed with SELECT clause");
         }
     }
+
+
+    public JSONObject runQueryObject(String id, String userId, String query) throws RecordNotFoundException, SQLException {
+        try (Connection _connection = connectionPool.get(id).getConnection();
+             PreparedStatement pst = _connection.prepareStatement(query);
+             ResultSet rs = pst.executeQuery();) {
+            // statement = _connection.createStatement();
+            // resultSet = statement.executeQuery(query);
+            JSONObject jsonObject = ResultSetToJson.convertToArray(rs);
+            // statement.close();
+            return jsonObject;
+        } catch (Exception e) {
+            logger.warn("runQuery Exception ----------------");
+            logger.warn("error: " + e.toString());
+            throw e;
+        }
+    }
+   
     // Metadata discovery - Get Database names
     public ArrayList<String> getDatabase(String id, String userId,String workspaceId)
             throws RecordNotFoundException, SQLException {

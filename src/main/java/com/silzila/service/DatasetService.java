@@ -36,6 +36,7 @@ import com.silzila.querybuilder.QueryComposer;
 import com.silzila.querybuilder.subTotalsCombination;
 import com.silzila.querybuilder.filteroptions.FilterOptionsQueryComposer;
 import com.silzila.querybuilder.relativefilter.RelativeFilterQueryComposer;
+import com.silzila.querybuilder.syncFilterOption.SyncFilterOptionsQueryComposer;
 import com.silzila.repository.DatasetRepository;
 import com.silzila.repository.PlayBookRepository;
 import com.silzila.helper.CustomQueryValidator;
@@ -47,7 +48,6 @@ public class DatasetService {
 
     private static final Logger logger = LogManager.getLogger(DatasetService.class);
 
-
     @Autowired
     DatasetRepository datasetRepository;
 
@@ -58,7 +58,7 @@ public class DatasetService {
     QueryComposer queryComposer;
 
     @Autowired
-     UserService userService;
+    UserService userService;
 
     @Autowired
     FilterOptionsQueryComposer filterOptionsQueryComposer;
@@ -148,7 +148,7 @@ public class DatasetService {
             relationship.setTable1(table1Alias);
             relationship.setTable2(table2Alias);
         });
-        if(dataSchema.getFilterPanels().size()!=0) {
+        if (dataSchema.getFilterPanels().size() != 0) {
             Map<String, String> aliasMap = new HashMap<>();
             for (int i = 0; i < tableNameList.size(); i++) {
                 aliasMap.put(tableNameList.get(i), aliasNameList.get(i));
@@ -163,7 +163,6 @@ public class DatasetService {
             }
         }
 
-
         // change id to alias name in every table
         for (int i = 0; i < dataSchema.getTables().size(); i++) {
             dataSchema.getTables().get(i).setId(aliasNameList.get(i));
@@ -173,20 +172,20 @@ public class DatasetService {
     }
 
     // CREATE DATASET
-    public DatasetDTO registerDataset(DatasetRequest datasetRequest, String userId,String workspaceId)
+    public DatasetDTO registerDataset(DatasetRequest datasetRequest, String userId, String workspaceId)
             throws JsonProcessingException, BadRequestException, ExpectationFailedException {
         User user = utilityService.getUserFromEmail(userId);
 
         List<Dataset> datasets = datasetRepository.findByUserIdAndDatasetName(userId, datasetRequest.getDatasetName());
         Workspace workspace = utilityService.getWorkspaceById(workspaceId);
-        String datasetName = datasetRequest.getDatasetName().trim();      
+        String datasetName = datasetRequest.getDatasetName().trim();
         // if dataset name already exists, send error
-         if (!datasets.isEmpty()) {
+        if (!datasets.isEmpty()) {
             throw new BadRequestException("Error: Dataset Name is already taken!");
         }
-        //checking whether the dataset is having custom query
+        // checking whether the dataset is having custom query
         long count = datasetRequest.getDataSchema().getTables().stream().filter(table -> table.isCustomQuery()).count();
-        if(count==0) {
+        if (count == 0) {
             DataSchema dataSchema = createTableAliasName(datasetRequest.getDataSchema());
             // datasetRequest.setDataSchema(dataSchema);
             // stringify dataschema (table + relationship section of API) to save in DB
@@ -209,24 +208,25 @@ public class DatasetService {
                     datasetRequest.getConnectionId(),
                     datasetRequest.getDatasetName(),
                     datasetRequest.getIsFlatFileData(),
-                    dataSchema
-            );
+                    dataSchema);
             return dto;
         }
-        //if the data set contains custom query, validating the query
+        // if the data set contains custom query, validating the query
         else {
-            Boolean isProperQuery=false;
-            List<Table> tables=datasetRequest.getDataSchema().getTables();
+            Boolean isProperQuery = false;
+            List<Table> tables = datasetRequest.getDataSchema().getTables();
             for (int i = 0; i < tables.size(); i++) {
-                if(tables.get(i).isCustomQuery()) {
-                    if (customQueryValidator.customQueryValidator(datasetRequest.getDataSchema().getTables().get(i).getCustomQuery())) {
+                if (tables.get(i).isCustomQuery()) {
+                    if (customQueryValidator
+                            .customQueryValidator(datasetRequest.getDataSchema().getTables().get(i).getCustomQuery())) {
                         isProperQuery = true;
                     } else {
-                       throw new ExpectationFailedException("Cannot proceed with dataset creation,CustomQuery is only allowed with SELECT clause");
+                        throw new ExpectationFailedException(
+                                "Cannot proceed with dataset creation,CustomQuery is only allowed with SELECT clause");
                     }
                 }
             }
-            if(isProperQuery){
+            if (isProperQuery) {
                 DataSchema dataSchema = createTableAliasName(datasetRequest.getDataSchema());
                 // datasetRequest.setDataSchema(dataSchema);
                 // stringify dataschema (table + relationship section of API) to save in DB
@@ -247,24 +247,21 @@ public class DatasetService {
                         datasetRequest.getConnectionId(),
                         datasetRequest.getDatasetName(),
                         datasetRequest.getIsFlatFileData(),
-                        dataSchema
-                );
+                        dataSchema);
                 return dto;
 
-            }else {
-                throw new ExpectationFailedException("Cannot proceed with dataset creation, CustomQuery is only allowed with SELECT clause");
+            } else {
+                throw new ExpectationFailedException(
+                        "Cannot proceed with dataset creation, CustomQuery is only allowed with SELECT clause");
             }
         }
     }
 
-
-
-
     // UPDATE DATASET
-    public DatasetDTO updateDataset(DatasetRequest datasetRequest, String id, String userId,String workspaceId)
-            throws RecordNotFoundException, JsonProcessingException, JsonMappingException, BadRequestException, ExpectationFailedException
-    {
-        User user =utilityService.getUserFromEmail(userId);
+    public DatasetDTO updateDataset(DatasetRequest datasetRequest, String id, String userId, String workspaceId)
+            throws RecordNotFoundException, JsonProcessingException, JsonMappingException, BadRequestException,
+            ExpectationFailedException {
+        User user = utilityService.getUserFromEmail(userId);
         String _datasetName = datasetRequest.getDatasetName().trim();
         Dataset _dataset = datasetRepository.findByIdAndWorkspaceId(id, workspaceId).orElseThrow();
         Optional<Dataset> dOptional = datasetRepository.findByIdAndUserId(id, userId);
@@ -297,7 +294,7 @@ public class DatasetService {
                     _dataset.getDatasetName(),
                     _dataset.getIsFlatFileData(),
                     dataSchema);
-            //add updated dataset in buffer
+            // add updated dataset in buffer
             buffer.addDatasetInBuffer(id, dto);
             return dto;
         } else {
@@ -305,10 +302,12 @@ public class DatasetService {
             List<Table> tables = datasetRequest.getDataSchema().getTables();
             for (int i = 0; i < tables.size(); i++) {
                 if (tables.get(i).isCustomQuery()) {
-                    if (customQueryValidator.customQueryValidator(datasetRequest.getDataSchema().getTables().get(i).getCustomQuery())) {
+                    if (customQueryValidator
+                            .customQueryValidator(datasetRequest.getDataSchema().getTables().get(i).getCustomQuery())) {
                         isProperQuery = true;
                     } else {
-                        throw new ExpectationFailedException("Cannot proceed with dataset updation,CustomQuery is only allowed with SELECT");
+                        throw new ExpectationFailedException(
+                                "Cannot proceed with dataset updation,CustomQuery is only allowed with SELECT");
                     }
                 }
             }
@@ -326,13 +325,13 @@ public class DatasetService {
                         _dataset.getConnectionId(),
                         _dataset.getDatasetName(),
                         _dataset.getIsFlatFileData(),
-                        dataSchema
-                );
-                //add updated dataset in buffer
+                        dataSchema);
+                // add updated dataset in buffer
                 buffer.addDatasetInBuffer(id, dto);
                 return dto;
             } else {
-                throw new ExpectationFailedException("Cannot proceed with dataset updation,CustomQuery is only allowed with SELECT");
+                throw new ExpectationFailedException(
+                        "Cannot proceed with dataset updation,CustomQuery is only allowed with SELECT");
             }
 
         }
@@ -355,7 +354,7 @@ public class DatasetService {
                         (String) result[2], // createdBy
                         (String) result[3], // workspaceId
                         (String) result[4], // workspaceName
-                        (String) result[5], //parentWorkspaceId
+                        (String) result[5], // parentWorkspaceId
                         (String) result[6] // parentWorkspaceName
                 ))
                 .collect(Collectors.toList());
@@ -364,12 +363,13 @@ public class DatasetService {
     }
 
     // READ ALL DATASETS
-    public List<DatasetNoSchemaDTO> getAllDatasets(String userId,String workspaceId)
-            throws JsonProcessingException,BadRequestException {
+    public List<DatasetNoSchemaDTO> getAllDatasets(String userId, String workspaceId)
+            throws JsonProcessingException, BadRequestException {
         List<Dataset> datasets = datasetRepository.findByUserId(userId);
         utilityService.isValidWorkspaceId(workspaceId);
-        // List<String> datasetIds = viewContentService.viewDatasetList(userId, workspaceId);
-        
+        // List<String> datasetIds = viewContentService.viewDatasetList(userId,
+        // workspaceId);
+
         List<DatasetNoSchemaDTO> dsDtos = new ArrayList<>();
         datasets.forEach(ds -> {
             DatasetNoSchemaDTO dto = new DatasetNoSchemaDTO(
@@ -380,15 +380,15 @@ public class DatasetService {
     }
 
     // READ ONE DATASET
-    public DatasetDTO getDatasetById(String id, String userId,String workspaceId)
+    public DatasetDTO getDatasetById(String id, String userId, String workspaceId)
             throws RecordNotFoundException, JsonMappingException, JsonProcessingException {
-        return buffer.getDatasetById(id, userId,workspaceId);
+        return buffer.getDatasetById(id, userId, workspaceId);
     }
 
     // DELETE DATASET
-    public void deleteDataset(String id, String userId,String workspaceId) throws RecordNotFoundException {
+    public void deleteDataset(String id, String userId, String workspaceId) throws RecordNotFoundException {
         // fetch the specific Dataset for the user
-              Optional<Dataset> datasetOptional = datasetRepository.findByIdAndWorkspaceId(id, workspaceId);
+        Optional<Dataset> datasetOptional = datasetRepository.findByIdAndWorkspaceId(id, workspaceId);
         // if no Dataset details, then send NOT FOUND Error
         if (!datasetOptional.isPresent()) {
             throw new RecordNotFoundException("Error: No such Dataset Id exists!");
@@ -400,29 +400,30 @@ public class DatasetService {
     }
 
     // load dataset details in buffer. This helps faster query execution.
-    public DatasetDTO loadDatasetInBuffer(String workspaceId,String dbConnectionId,String datasetId, String userId)
-    throws RecordNotFoundException, JsonMappingException, JsonProcessingException, ClassNotFoundException, BadRequestException, SQLException {
-        DatasetDTO dto = buffer.loadDatasetInBuffer(workspaceId,datasetId, userId);
-        if(!dto.getDataSchema().getFilterPanels().isEmpty()){
-            List<FilterPanel> filterPanels = relativeFilterProcessor.processFilterPanels(dto.getDataSchema().getFilterPanels(), userId, dbConnectionId, datasetId,workspaceId,this::relativeFilter);
+    public DatasetDTO loadDatasetInBuffer(String workspaceId, String dbConnectionId, String datasetId, String userId)
+            throws RecordNotFoundException, JsonMappingException, JsonProcessingException, ClassNotFoundException,
+            BadRequestException, SQLException {
+        DatasetDTO dto = buffer.loadDatasetInBuffer(workspaceId, datasetId, userId);
+        if (!dto.getDataSchema().getFilterPanels().isEmpty()) {
+            List<FilterPanel> filterPanels = relativeFilterProcessor.processFilterPanels(
+                    dto.getDataSchema().getFilterPanels(), userId, dbConnectionId, datasetId, workspaceId,
+                    this::relativeFilter);
             dto.getDataSchema().setFilterPanels(filterPanels);
         }
         return dto;
-        }
+    }
 
     // RUN QUERY
-    public String runQuery(String userId, String dBConnectionId, String datasetId, String workspaceId,Boolean isSqlOnly,
+    public String runQuery(String userId, String dBConnectionId, String datasetId, String workspaceId,
+            Boolean isSqlOnly,
             List<Query> queries)
             throws RecordNotFoundException, SQLException, JsonMappingException, JsonProcessingException,
             BadRequestException, ClassNotFoundException, ParseException {
-        
-        
 
         // get dataset details in buffer
-        DatasetDTO ds = loadDatasetInBuffer(workspaceId, dBConnectionId,datasetId, userId);
+        DatasetDTO ds = loadDatasetInBuffer(workspaceId, dBConnectionId, datasetId, userId);
 
         String vendorName = "";
-
 
         // for DB based datasets, connection id is must
         if (ds.getIsFlatFileData() == false) {
@@ -434,7 +435,7 @@ public class DatasetService {
              * create connection pool (if not) and then get vendor name.
              * SQL Dialect will be different based on vendor name
              */
-            vendorName = connectionPoolService.getVendorNameFromConnectionPool(dBConnectionId, userId,workspaceId);
+            vendorName = connectionPoolService.getVendorNameFromConnectionPool(dBConnectionId, userId, workspaceId);
             // System.out.println("Dialect *****************" + vendorName);
         }
 
@@ -448,7 +449,8 @@ public class DatasetService {
             // relative Date filter
             // Get the first filter panel from the request
             // Assuming req.getFilterPanels() returns a list of FilterPanel objects
-            List<FilterPanel> filterPanels = relativeFilterProcessor.processFilterPanels(req.getFilterPanels(), userId, dBConnectionId, datasetId,workspaceId,this::relativeFilter);
+            List<FilterPanel> filterPanels = relativeFilterProcessor.processFilterPanels(req.getFilterPanels(), userId,
+                    dBConnectionId, datasetId, workspaceId, this::relativeFilter);
             req.setFilterPanels(filterPanels);
         }
         /* DB based Dataset */
@@ -458,8 +460,8 @@ public class DatasetService {
             // for totals & subtotals only
             for (Query req : queries) {
                 if (req.getSubTotal() != null && req.getSubTotal()) {
-                   String result = subTotals(query, req, vendorName, ds, isSqlOnly, dBConnectionId, userId);
-                   return result;
+                    String result = subTotals(query, req, vendorName, ds, isSqlOnly, dBConnectionId, userId);
+                    return result;
                 }
             }
 
@@ -501,11 +503,11 @@ public class DatasetService {
             final List<String> uniqueTableIds = tableIds.stream().distinct().collect(Collectors.toList());
             // get all file Ids (which is inside table obj)
             List<Table> tableObjList = ds.getDataSchema().getTables().stream()
-                     .filter(table -> uniqueTableIds.contains(table.getId()))
+                    .filter(table -> uniqueTableIds.contains(table.getId()))
                     .collect(Collectors.toList());
 
             logger.info("unique table id =======\n" + uniqueTableIds.toString() +
-                    "\ntableObjectList ======== \n" + tableObjList.toString() );
+                    "\ntableObjectList ======== \n" + tableObjList.toString());
             // throw error when any requested table id is not in dataset
             if (uniqueTableIds.size() != tableObjList.size()) {
                 throw new BadRequestException("Error: some table id is not present in Dataset!");
@@ -519,8 +521,8 @@ public class DatasetService {
             // for totals & subtotals only
             for (Query req : queries) {
                 if (req.getSubTotal() != null && req.getSubTotal()) {
-                   String result = subTotals(query, req, "duckdb", ds, isSqlOnly, dBConnectionId, userId);
-                   return result;
+                    String result = subTotals(query, req, "duckdb", ds, isSqlOnly, dBConnectionId, userId);
+                    return result;
                 }
             }
 
@@ -539,35 +541,36 @@ public class DatasetService {
         }
 
     }
-    
+
     // fo totals and subtotals
-    public String subTotals(String query, Query req, String vendorName, DatasetDTO ds, Boolean isSqlOnly, 
-                        String dBConnectionId, String userId) 
-                        throws JsonMappingException, JsonProcessingException, ClassNotFoundException, 
-                        BadRequestException, RecordNotFoundException, SQLException, ParseException {
-        
+    public String subTotals(String query, Query req, String vendorName, DatasetDTO ds, Boolean isSqlOnly,
+            String dBConnectionId, String userId)
+            throws JsonMappingException, JsonProcessingException, ClassNotFoundException,
+            BadRequestException, RecordNotFoundException, SQLException, ParseException {
+
         List<String> queryList = new ArrayList<>();
         queryList.add(query);
         queryList.addAll(subTotalsCombination.subTotalCombinationResults(req, vendorName, ds));
-        
-        if (Boolean.TRUE.equals(isSqlOnly)) { 
+
+        if (Boolean.TRUE.equals(isSqlOnly)) {
             StringBuilder queries = new StringBuilder();
             queries.append("Query for Main:\n").append(queryList.get(0)).append("\n\n\n");
-            
+
             for (int i = 1; i < queryList.size(); i++) {
                 queries.append("Query for SubTotal:\n").append(queryList.get(i)).append("\n\n\n");
             }
-            
+
             return queries.toString().trim();
         } else {
             List<List<String>> subTotalCombinations = new ArrayList<>();
             List<List<Dimension>> dimensionGroups = new ArrayList<>();
-            
+
             dimensionGroups.add(req.getDimensions());
             dimensionGroups.addAll(subTotalsCombination.subTotalsCombinations(req));
-            
+
             for (List<Dimension> dimensions : dimensionGroups) {
-                Query dimensionQuery = new Query(dimensions, new ArrayList<>(), new ArrayList<>(), new ArrayList<>(), null);
+                Query dimensionQuery = new Query(dimensions, new ArrayList<>(), new ArrayList<>(), new ArrayList<>(),
+                        null);
                 QueryClauseFieldListMap qMap = subTotalsCombination.selectClauseSql(dimensionQuery, vendorName);
                 List<String> combination = new ArrayList<>(qMap.getGroupByList());
                 subTotalCombinations.add(combination);
@@ -581,50 +584,50 @@ public class DatasetService {
                 JSONArray queryResult;
                 try {
                     if (dBConnectionId != null && !dBConnectionId.isEmpty()) {
-                    queryResult = connectionPoolService.runQuery(dBConnectionId, userId, strQuery);
-                    }
-                    else {
-                    queryResult = duckDbService.runQuery(strQuery);
+                        queryResult = connectionPoolService.runQuery(dBConnectionId, userId, strQuery);
+                    } else {
+                        queryResult = duckDbService.runQuery(strQuery);
                     }
                 } catch (Exception e) {
                     throw new SQLException("Error executing query: " + strQuery, e);
                 }
-                
+
                 JSONObject jsonObject = new JSONObject();
                 jsonObject.put("combination", dimensions);
                 jsonObject.put("result", queryResult);
                 finalResult.put(jsonObject);
             }
-            
+
             return finalResult.toString();
         }
     }
 
-
     // Populate filter Options
-    public Object filterOptions(String userId, String dBConnectionId, String datasetId, String workspaceId,ColumnFilter columnFilter)
+    public Object filterOptions(String userId, String dBConnectionId, String datasetId, String workspaceId,
+            ColumnFilter columnFilter)
             throws RecordNotFoundException, SQLException, JsonProcessingException,
             BadRequestException, ClassNotFoundException {
-        //checking for datasetId to perform filter options for dataset filter
-        if(datasetId==null || datasetId.isEmpty()){
+        // checking for datasetId to perform filter options for dataset filter
+        if (datasetId == null || datasetId.isEmpty()) {
             String vendorName = "";
-            String query ="";
-            JSONArray jsonArray=null;
-            if(dBConnectionId == null || dBConnectionId.isEmpty()) {
-                 query = filterOptionsQueryComposer.composeQuery(columnFilter, null, "duckdb");
+            String query = "";
+            JSONArray jsonArray = null;
+            if (dBConnectionId == null || dBConnectionId.isEmpty()) {
+                query = filterOptionsQueryComposer.composeQuery(columnFilter, null, "duckdb");
                 logger.info("\n******* QUERY **********\n" + query);
-                //creating table object to send it to create a view with the fileId
-                Table table = new Table(columnFilter.getTableId(), columnFilter.getFlatFileId(), null, null, null, columnFilter.getTableId()  , null, null, false, null);
+                // creating table object to send it to create a view with the fileId
+                Table table = new Table(columnFilter.getTableId(), columnFilter.getFlatFileId(), null, null, null,
+                        columnFilter.getTableId(), null, null, false, null);
                 List<Table> tableObjects = new ArrayList<>();
                 tableObjects.add(table);
                 // calling this to crete a view to run on top of that
                 fileDataService.getFileNameFromFileId(userId, tableObjects);
                 jsonArray = duckDbService.runQuery(query);
-            }else{
-                 vendorName = connectionPoolService.getVendorNameFromConnectionPool(dBConnectionId, userId,workspaceId);
-                 query = filterOptionsQueryComposer.composeQuery(columnFilter, null, vendorName);
-                 logger.info("\n******* QUERY **********\n" + query);
-                 jsonArray = connectionPoolService.runQuery(dBConnectionId, userId, query);
+            } else {
+                vendorName = connectionPoolService.getVendorNameFromConnectionPool(dBConnectionId, userId, workspaceId);
+                query = filterOptionsQueryComposer.composeQuery(columnFilter, null, vendorName);
+                logger.info("\n******* QUERY **********\n" + query);
+                jsonArray = connectionPoolService.runQuery(dBConnectionId, userId, query);
             }
             return jsonArray;
 
@@ -632,7 +635,7 @@ public class DatasetService {
 
         else {
             String vendorName = "";
-            DatasetDTO ds = loadDatasetInBuffer(workspaceId,dBConnectionId,datasetId, userId);
+            DatasetDTO ds = loadDatasetInBuffer(workspaceId, dBConnectionId, datasetId, userId);
             // for DB based datasets, connection id is must
             if (ds.getIsFlatFileData() == false) {
                 if (dBConnectionId == null || dBConnectionId.isEmpty()) {
@@ -643,7 +646,7 @@ public class DatasetService {
                  * create connection pool (if not) and then get vendor name.
                  * SQL Dialect will be different based on vendor name
                  */
-                vendorName = connectionPoolService.getVendorNameFromConnectionPool(dBConnectionId, userId,workspaceId);
+                vendorName = connectionPoolService.getVendorNameFromConnectionPool(dBConnectionId, userId, workspaceId);
                 String query = filterOptionsQueryComposer.composeQuery(columnFilter, ds, vendorName);
                 logger.info("\n******* QUERY **********\n" + query);
                 JSONArray jsonArray = connectionPoolService.runQuery(dBConnectionId, userId, query);
@@ -660,7 +663,6 @@ public class DatasetService {
                 List<Table> tableObjList = ds.getDataSchema().getTables().stream()
                         .filter(table -> table.getId().equals(tableId))
                         .collect(Collectors.toList());
-
 
                 // throw error when requested table id is not in dataset
                 if (tableObjList.size() != 1) {
@@ -681,13 +683,115 @@ public class DatasetService {
 
     }
 
-  
     public JSONArray relativeFilter(String userId, String dBConnectionId, String datasetId, String workspaceId,
             @Valid RelativeFilterRequest relativeFilter)
             throws RecordNotFoundException, BadRequestException, SQLException, ClassNotFoundException,
             JsonMappingException, JsonProcessingException {
 
         return connectionPoolService.relativeFilter(userId, dBConnectionId, datasetId, workspaceId, relativeFilter);
+
+    }
+
+    public JSONObject syncFilterOption(String userId, List<Filter> filters, String dBConnectionId, String datasetId,
+            String workspaceId)
+            throws RecordNotFoundException, SQLException, JsonProcessingException, BadRequestException,
+            ClassNotFoundException {
+
+        // Check if the userId is null or empty, and throw an exception if it is invalid
+        if (userId == null || userId.isEmpty()) {
+            throw new BadRequestException("User ID must not be null or empty");
+        }
+        System.out.println(1);
+    System.out.println(filters.size());
+
+        // Load the dataset into memory using provided connection and dataset IDs
+        DatasetDTO ds = loadDatasetInBuffer(workspaceId, dBConnectionId, datasetId, userId);
+        System.out.println(ds);
+        System.out.println(2);
+        
+
+        // if we have relative filter so we have to preprocess it
+        for (Filter filter : filters) {
+            if (filter.getRelativeCondition() != null) {
+                relativeFilterProcessor.processFilter(filter, userId, dBConnectionId, datasetId,workspaceId, this::relativeFilter);
+            }
+        }
+        System.out.println(2);
+
+        // Check if the data is not a flat file and is instead a database connection
+        if (ds.getIsFlatFileData() == false && ds.getIsFlatFileData() != null) {
+            // Validate that the DB connection ID is not null or empty for database queries
+            if (dBConnectionId == null || dBConnectionId.isEmpty()) {
+                throw new BadRequestException("Error: DB Connection Id can't be empty!");
+            }
+
+            // Retrieve the vendor name from the connection pool based on the DB connection
+            // ID and user ID
+            String vendorName = connectionPoolService.getVendorNameFromConnectionPool(dBConnectionId, userId,
+                    workspaceId);
+
+            // Compose the SQL query specific to the database based on column filters,
+            // dataset, and vendor name
+            String query = SyncFilterOptionsQueryComposer.composeQuery(filters, ds, vendorName, userId);
+
+            // Validate that the query is not empty or null, and throw an exception if it is
+            // invalid
+            if (query.isEmpty() || query == null) {
+                throw new BadRequestException("Error: Empty query");
+            }
+
+            logger.info("\n******* QUERY **********\n" + query);
+
+            // Execute the query on the database using the connection pool service and
+            // return the result as a JSON object
+            JSONObject jsonObject = connectionPoolService.runQueryObject(dBConnectionId, userId, query);
+            return jsonObject;
+
+        } else {
+            // Process the case where the data is stored in flat files
+
+            // Extract all valid, non-null table IDs from the column filters
+            List<String> tableIds = filters.stream()
+                    .map(Filter::getTableId)
+                    .filter(Objects::nonNull)
+                    .filter(tableId -> !tableId.isEmpty())
+                    .collect(Collectors.toList());
+
+            // Ensure that there are valid table IDs, otherwise throw an exception
+            if (tableIds.isEmpty()) {
+                throw new BadRequestException("Error: No table ids found in column filters!");
+            }
+
+            // Retrieve table objects from the dataset schema that match the provided table
+            // IDs
+            List<Table> tableObjList = ds.getDataSchema().getTables().stream()
+                    .filter(table -> tableIds.contains(table.getId()))
+                    .collect(Collectors.toList());
+
+            // Check that at least one matching table object is found in the dataset, else
+            // throw an exception
+            if (tableObjList.size() < 1) {
+                throw new BadRequestException("Error: table id is not present in Dataset!");
+            }
+
+            // Load flat files as database views in DuckDB using the file service
+            fileDataService.getFileNameFromFileId(userId, tableObjList);
+
+            // Build the query for DuckDB based on the column filters, dataset, and
+            // specified 'duckdb' vendor type
+            String query = SyncFilterOptionsQueryComposer.composeQuery(filters, ds, "duckdb", userId);
+
+            // Ensure the DuckDB query is not empty or null, and throw an exception if
+            // invalid
+            if (query.isEmpty() || query == null) {
+                throw new BadRequestException("Error: Empty query");
+            }
+
+            logger.info("\n******* QUERY **********\n" + query);
+
+            // Execute the DuckDB query
+            return duckDbService.runSyncQuery(query);
+        }
 
     }
 

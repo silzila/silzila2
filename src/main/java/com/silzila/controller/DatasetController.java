@@ -57,7 +57,7 @@ public class DatasetController {
             ExpectationFailedException {
         // get the rquester user id
         String userId = reqHeader.get("username");
-        DatasetDTO dto = datasetService.updateDataset(datasetRequest, id, userId,workspaceId);
+        DatasetDTO dto = datasetService.updateDataset(datasetRequest, id, userId, workspaceId);
         return ResponseEntity.ok(dto);
     }
 
@@ -65,12 +65,12 @@ public class DatasetController {
     @GetMapping("/dataset")
     public List<DatasetNoSchemaDTO> getAllDataset(@RequestHeader Map<String, String> reqHeader,
             @RequestParam String workspaceId)
-            throws JsonProcessingException ,BadRequestException{
+            throws JsonProcessingException, BadRequestException {
         // get the requester user Id
         String userId = reqHeader.get("username");
         // service call to get list of data sets,
         // empty list will not throw exceptions but return as empty list
-        List<DatasetNoSchemaDTO> dtos = datasetService.getAllDatasets(userId,workspaceId);
+        List<DatasetNoSchemaDTO> dtos = datasetService.getAllDatasets(userId, workspaceId);
         return dtos;
     }
 
@@ -83,7 +83,7 @@ public class DatasetController {
         // get the requester user Id
         String userId = reqHeader.get("username");
         // service call to get list of data sets
-        DatasetDTO dto = datasetService.getDatasetById(id, userId,workspaceId);
+        DatasetDTO dto = datasetService.getDatasetById(id, userId, workspaceId);
         return ResponseEntity.ok(dto);
 
     }
@@ -97,7 +97,7 @@ public class DatasetController {
         // get the requester user Id
         String userId = reqHeader.get("username");
         // service call to delete
-        datasetService.deleteDataset(id, userId,workspaceId);
+        datasetService.deleteDataset(id, userId, workspaceId);
         return ResponseEntity.ok().body(new MessageResponse("Dataset is deleted"));
     }
 
@@ -111,7 +111,8 @@ public class DatasetController {
             throws RecordNotFoundException, SQLException, JsonMappingException, JsonProcessingException,
             BadRequestException, ClassNotFoundException, ParseException {
         String userId = reqHeader.get("username");
-        String queryResultOrQueryText = datasetService.runQuery(userId, dBConnectionId, datasetId,workspaceId, isSqlOnly, query);
+        String queryResultOrQueryText = datasetService.runQuery(userId, dBConnectionId, datasetId, workspaceId,
+                isSqlOnly, query);
         return ResponseEntity.status(HttpStatus.OK).body(queryResultOrQueryText);
     }
 
@@ -124,9 +125,23 @@ public class DatasetController {
             throws RecordNotFoundException, SQLException, JsonMappingException, JsonProcessingException,
             BadRequestException, ClassNotFoundException {
         String userId = reqHeader.get("username");
-        Object jsonArrayOrJsonNodeList = datasetService.filterOptions(userId, dBConnectionId, datasetId,workspaceId, columnFilter);
+        Object jsonArrayOrJsonNodeList = datasetService.filterOptions(userId, dBConnectionId, datasetId, workspaceId,
+                columnFilter);
         return ResponseEntity.status(HttpStatus.OK).body(jsonArrayOrJsonNodeList.toString());
 
+    }
+
+    @PostMapping("/sync-filter-options")
+    public ResponseEntity<?> syncFilterOptions(@RequestHeader Map<String, String> reqHeader,
+            @Valid @RequestBody List<Filter> filter,
+            @RequestParam(name = "dbconnectionid", required = false) String dBConnectionId,
+            @RequestParam(name="workspaceid",required = false) String workspaceId,
+            @RequestParam(name = "datasetid", required = false) String datasetId)
+            throws RecordNotFoundException, SQLException, JsonMappingException, JsonProcessingException,
+            BadRequestException, ClassNotFoundException {
+        String userId = reqHeader.get("username");
+        Object jsonArray = datasetService.syncFilterOption(userId, filter, dBConnectionId, datasetId,workspaceId);
+        return ResponseEntity.status(HttpStatus.OK).body(jsonArray.toString());
     }
 
     @PostMapping("/relative-filter")
@@ -138,7 +153,8 @@ public class DatasetController {
             throws JsonMappingException, JsonProcessingException, RecordNotFoundException, BadRequestException,
             SQLException, ClassNotFoundException {
         String userId = reqHeader.get("username");
-        Object jsonArray = datasetService.relativeFilter(userId, dBConnectionId, datasetId,workspaceId, relativeFilter);
+        Object jsonArray = datasetService.relativeFilter(userId, dBConnectionId, datasetId, workspaceId,
+                relativeFilter);
         return (ResponseEntity<?>) ResponseEntity.status(HttpStatus.OK).body(jsonArray.toString());
     }
 
