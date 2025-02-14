@@ -44,8 +44,8 @@ public class SyncFilterOptionsQueryComposer {
             // Build the final query
             finalQuery = SyncFilterQuery.getSyncFilterOptions(cf, fromQuery, vendorName,ds);
 
-            // Validate the query, ensuring it is not empty or null
-            if (finalQuery == null || finalQuery.isEmpty()) {
+            // Validate the query, ensuring it is not  null
+            if (finalQuery == null ) {
                 return null;
             }
 

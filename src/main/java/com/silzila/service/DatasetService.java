@@ -742,7 +742,7 @@ public class DatasetService {
 
             // Validate that the query is not empty or null, and throw an exception if it is
             // invalid
-            if (query.isEmpty() || query == null) {
+            if ( query == null) {
                return null;
             }
 
@@ -789,7 +789,7 @@ public class DatasetService {
 
             // Ensure the DuckDB query is not empty or null, and throw an exception if
             // invalid
-            if (query.isEmpty() || query == null) {
+            if ( query == null) {
                 return null;
             }
 

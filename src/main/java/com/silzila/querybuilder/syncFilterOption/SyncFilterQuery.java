@@ -23,6 +23,7 @@ public class SyncFilterQuery {
         int countCurrentSelection=0;
         boolean isUserSelectionAll=false;
 
+
         try {
             // Check for null or empty filters
             if (cf == null || cf.isEmpty()) {
@@ -47,26 +48,39 @@ public class SyncFilterQuery {
                 }
 
                 // Add the column to the SELECT clause if currentSelection is false
-                if (!filter.getCurrentSelection()) {
+                if (!filter.getCurrentSelection() ) {
                     if (filter.getOperator() == Filter.Operator.IN) {
+
                         if(filter.getUserSelection()!=null&&!filter.getUserSelection().get(0).equalsIgnoreCase("all")){
                             String columnName = filter.getTableId() + ".\"" + filter.getFieldName() + "\"";
                             selectedColumns.add(columnName);
                             aliasMap.put(columnName, aliasCount++);
                             isUserSelectionAll=true;
+
                         }
-                        
 
                         // Create and add the Dimension object
-                        Dimension dimension = new Dimension(false,null,
-                                filter.getTableId(),
-                                filter.getFieldName(),
-                                Dimension.DataType.fromValue(filter.getDataType().toString()),
-                                Dimension.TimeGrain.fromValue(filter.getTimeGrain().toString()),
-                                false);
+                        Dimension dimension = new Dimension(
+                                filter.getIsCalculatedField(), filter.getCalculatedField(), filter.getTableId(),
+                                                                filter.getFieldName(),
+                                                                Dimension.DataType.fromValue(filter.getDataType().toString()),
+                                                                Dimension.TimeGrain.fromValue(filter.getTimeGrain().toString()),
+                                                                false, aliasCount);
                         dimensions.add(dimension);
                     }
-                } else {
+                }else{
+                    if(filter.getUserSelection()==null && filter.getOperator() == Filter.Operator.IN){
+                        String columnName = filter.getTableId() + ".\"" + filter.getFieldName() + "\"";
+                            selectedColumns.add(columnName);
+
+                            Dimension dimension = new Dimension(
+                                filter.getIsCalculatedField(), filter.getCalculatedField(), filter.getTableId(),
+                                                                filter.getFieldName(),
+                                                                Dimension.DataType.fromValue(filter.getDataType().toString()),
+                                                                Dimension.TimeGrain.fromValue(filter.getTimeGrain().toString()),
+                                                                false, aliasCount);
+                        dimensions.add(dimension);
+                    }
                     countCurrentSelection++;
                 }
 
@@ -80,7 +94,7 @@ public class SyncFilterQuery {
             
             }
 
-            if (dimensions == null) {
+            if (dimensions.isEmpty()) {
                 return null;
             }
             if (countCurrentSelection != 1) {

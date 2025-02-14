@@ -37,6 +37,8 @@ public class Dimension implements Serializable {
     private Dimension.TimeGrain timeGrain = Dimension.TimeGrain.fromValue("year");
     @JsonProperty("rollupDepth")
     private Boolean rollupDepth = false;
+    @JsonProperty("alias")
+    private Integer alias = 0;
     private final static long serialVersionUID = -6693625304963309989L;
 
     /**
@@ -53,7 +55,7 @@ public class Dimension implements Serializable {
      * @param dataType
      * @param tableId
      */
-    public Dimension(Boolean isCalculatedField,List<CalculatedFieldRequest> calculatedField,String tableId, String fieldName, Dimension.DataType dataType, Dimension.TimeGrain timeGrain,Boolean rollupDepth) {
+    public Dimension(Boolean isCalculatedField,List<CalculatedFieldRequest> calculatedField,String tableId, String fieldName, Dimension.DataType dataType, Dimension.TimeGrain timeGrain,Boolean rollupDepth,Integer alias) {
         super();
         this.isCalculatedField = isCalculatedField;
         this.calculatedField = calculatedField;
@@ -62,7 +64,16 @@ public class Dimension implements Serializable {
         this.dataType = dataType;
         this.timeGrain = timeGrain;
         this.rollupDepth = rollupDepth;
+        this.alias=alias;
     }
+    public Integer getAlias() {
+        return alias;
+    }
+
+    public void setAlias(Integer alias) {
+        this.alias = alias;
+    }
+
 
     @JsonProperty("tableId")
     public String getTableId() {
